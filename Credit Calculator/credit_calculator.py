@@ -10,42 +10,42 @@ class CreditCalculator:
 
     types = ["annuity", "diff"]
 
-    def __init__(self, payment_type=None, payment=None, principal=None, periods=None, interest=None):
+    def __init__(self, calc_type=None, monthly_payment=None, loan_principal=None, num_periods=None, annual_interest=None):
         """Initialize the CreditCalculator object
 
         Args:
-            payment_type (str): type of payment
-            principal (int): loan principal
-            payment (int): the amount of the monthly payment
-            periods (int): the number of months required to repay the loan
-            interest (float): interests
+            calc_type (str): type of payment (annuity or differentiated)
+            loan_principal (int): loan principal amount
+            monthly_payment (int): the amount of the monthly payment
+            num_periods (int): the number of months required to repay the loan
+            annual_interest (float): annual interest rate
         """
-        self.payment_type = payment_type
-        self.payment = payment
-        self.principal = principal
-        self.periods = periods
-        self.interest = interest
+        self.calc_type = calc_type
+        self.monthly_payment = monthly_payment
+        self.loan_principal = loan_principal
+        self.num_periods = num_periods
+        self.annual_interest = annual_interest
 
-        self.check_negative_params()
+        self.check_for_negative_values()
 
-    def start(self):
+    def start_calculation(self):
         """Starts calculations based on input data and outputs the result"""
 
-        # Calculate annuity
-        if self.payment_type == self.types[0] and not self.payment and self.principal and self.periods:
-            annuity, overpayment = self.calculate_annuity()
-            print(f"Your annuity payment = {annuity}!\n"
+        # Calculate annuity payment
+        if self.calc_type == self.types[0] and not self.monthly_payment and self.loan_principal and self.num_periods:
+            annuity_payment, overpayment = self.calculate_annuity_payment()
+            print(f"Your annuity payment = {annuity_payment}!\n"
                   f"Overpayment = {overpayment}")
 
         # Calculate loan principal
-        elif self.payment_type == self.types[0] and self.payment and not self.principal and self.periods:
-            principal, overpayment = self.calculate_principal()
+        elif self.calc_type == self.types[0] and self.monthly_payment and not self.loan_principal and self.num_periods:
+            principal, overpayment = self.calculate_loan_principal()
             print(f"Your loan principal = {principal}!\n"
                   f"Overpayment = {overpayment}")
 
-        # Calculate periods
-        elif self.payment_type == self.types[0] and self.payment and self.principal and not self.periods:
-            years, months, overpayment = self.calculate_periods()
+        # Calculate number of periods
+        elif self.calc_type == self.types[0] and self.monthly_payment and self.loan_principal and not self.num_periods:
+            years, months, overpayment = self.calculate_num_periods()
 
             if years == 0 and months > 0:
                 print("It will take {} month{} to repay this loan!"
@@ -61,113 +61,113 @@ class CreditCalculator:
 
             print(f"Overpayment = {overpayment}")
 
-        # Calculate diff
-        elif self.payment_type == self.types[1] and not self.payment and self.principal and self.periods:
-            diff, overpayment = self.calculate_diff()
+        # Calculate differentiated payments
+        elif self.calc_type == self.types[1] and not self.monthly_payment and self.loan_principal and self.num_periods:
+            diff_payments, overpayment = self.calculate_differentiated_payments()
 
-            for i in range(self.periods):
-                print(f"Month {i + 1}: payment is {diff[i]}")
+            for i in range(self.num_periods):
+                print(f"Month {i + 1}: payment is {diff_payments[i]}")
 
             print(f"Overpayment = {overpayment}")
 
         else:
             print("Incorrect parameters")
 
-    def check_negative_params(self):
-        """Checks for negatives values and exits the program if there are any"""
-        if ((self.payment and self.payment < 0) or
-                (self.principal and self.principal < 0) or
-                (self.periods and self.periods < 0) or
-                not self.interest or self.interest < 0):
+    def check_for_negative_values(self):
+        """Checks for negative values and exits the program if any are found"""
+        if ((self.monthly_payment and self.monthly_payment < 0) or
+                (self.loan_principal and self.loan_principal < 0) or
+                (self.num_periods and self.num_periods < 0) or
+                not self.annual_interest or self.annual_interest < 0):
 
             print("Incorrect parameters")
             exit()
 
-    def calculate_annuity(self):
+    def calculate_annuity_payment(self):
         """Calculates annuity payment and overpayment
 
         Returns:
             tuple: annuity payment and overpayment
         """
-        interest = self.get_nominal_interest()
+        interest_rate = self.calculate_nominal_interest_rate()
 
-        numerator = interest * pow(1 + interest, self.periods)
-        denominator = pow(1 + interest, self.periods) - 1
+        numerator = interest_rate * pow(1 + interest_rate, self.num_periods)
+        denominator = pow(1 + interest_rate, self.num_periods) - 1
 
-        annuity = ceil(self.principal * (numerator / denominator))
-        overpayment = ceil(annuity * self.periods - self.principal)
+        annuity_payment = ceil(self.loan_principal * (numerator / denominator))
+        overpayment = ceil(annuity_payment * self.num_periods - self.loan_principal)
 
-        return annuity, overpayment
+        return annuity_payment, overpayment
 
-    def calculate_diff(self):
-        """Calculates differentiated payment and overpayment
+    def calculate_differentiated_payments(self):
+        """Calculates differentiated payments and overpayment
 
         Returns:
             tuple: list of payments for each month and overpayment
         """
-        interest = self.get_nominal_interest()
+        interest_rate = self.calculate_nominal_interest_rate()
         payments = []
 
-        for month in range(1, self.periods + 1):
-            diff_payment = (self.principal / self.periods + interest *
-                            (self.principal - (self.principal * (month - 1) / self.periods)))
+        for month in range(1, self.num_periods + 1):
+            diff_payment = (self.loan_principal / self.num_periods + interest_rate *
+                            (self.loan_principal - (self.loan_principal * (month - 1) / self.num_periods)))
             payments.append(ceil(diff_payment))
-        overpayment = ceil(sum(payments) - self.principal)
+        overpayment = ceil(sum(payments) - self.loan_principal)
 
         return payments, overpayment
 
-    def calculate_principal(self):
+    def calculate_loan_principal(self):
         """Calculate loan principal and overpayment
 
         Returns:
             tuple: loan principal and overpayment
         """
-        interest = self.get_nominal_interest()
+        interest_rate = self.calculate_nominal_interest_rate()
 
-        numerator = interest * pow(1 + interest, self.periods)
-        denominator = pow(1 + interest, self.periods) - 1
+        numerator = interest_rate * pow(1 + interest_rate, self.num_periods)
+        denominator = pow(1 + interest_rate, self.num_periods) - 1
 
-        principal = floor(self.payment / (numerator / denominator))
-        overpayment = ceil(self.payment * self.periods - principal)
+        principal = floor(self.monthly_payment / (numerator / denominator))
+        overpayment = ceil(self.monthly_payment * self.num_periods - principal)
 
         return principal, overpayment
 
-    def calculate_periods(self):
+    def calculate_num_periods(self):
         """Calculate number of periods and overpayment
 
         Returns:
             tuple: years, months, and overpayment
         """
-        interest = self.get_nominal_interest()
+        interest_rate = self.calculate_nominal_interest_rate()
 
-        calculations = self.payment / (self.payment - interest * self.principal)
-        base = 1 + interest
+        calculations = self.monthly_payment / (self.monthly_payment - interest_rate * self.loan_principal)
+        base = 1 + interest_rate
         periods = log(calculations, base)
 
         years = ceil(periods) // 12
         months = ceil(periods) % 12
-        overpayment = ceil(self.payment * ceil(periods) - self.principal)
+        overpayment = ceil(self.monthly_payment * ceil(periods) - self.loan_principal)
 
         return years, months, overpayment
 
-    def get_nominal_interest(self):
-        """Calculate nominal interest
+    def calculate_nominal_interest_rate(self):
+        """Calculate nominal interest rate
 
         Returns:
-            float: nominal interest
+            float: nominal interest rate
         """
-        return self.interest / (12 * 100)
+        return self.annual_interest / (12 * 100)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Program for calculating credits")
-    parser.add_argument("--type", type=str, help="The type of payment")
+    parser = argparse.ArgumentParser(description="Program for calculating credit payments")
+    parser.add_argument("--type", type=str, help="The type of payment: 'annuity' or 'diff'")
     parser.add_argument("--payment", type=int, help="The amount of the monthly payment")
-    parser.add_argument("--principal", type=int, help="Loan principal")
+    parser.add_argument("--principal", type=int, help="The loan principal amount")
     parser.add_argument("--periods", type=int, help="The number of months required to repay the loan")
-    parser.add_argument("--interest", type=float, help="Interests")
+    parser.add_argument("--interest", type=float, help="The annual interest rate (as a percentage)")
 
     args = parser.parse_args()
 
     calculator = CreditCalculator(args.type, args.payment, args.principal, args.periods, args.interest)
-    calculator.start()
+    calculator.start_calculation()

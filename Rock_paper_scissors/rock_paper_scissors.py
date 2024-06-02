@@ -3,7 +3,7 @@ from random import choice
 
 def get_rating(username):
     """Get user's rating from file."""
-    with open("rating", "r", encoding="utf-8") as file:
+    with open("rating.txt", "r") as file:
         for line in file:
             name, points = line.split()
             if username == name:
